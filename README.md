@@ -2,7 +2,7 @@
 
 [![Rust CI](https://github.com/Qihang-Li/mini-redis/actions/workflows/rust.yml/badge.svg?branch=master&event=push)](https://github.com/Qihang-Li/mini-redis/actions/workflows/rust.yml)
 
-A Redis-like TCP server and command-line client written in Rust with Tokio. It supports in-memory GET and SET operations over a RESP subset, with incremental frame parsing, concurrent connection handling, resource limits, coordinated shutdown, and unit and integration tests.
+A Redis-like TCP server and command-line client written in Rust with Tokio. It supports **in-memory GET and SET operations over a RESP subset**, with incremental frame parsing, concurrent connection handling, resource limits, coordinated shutdown, and unit and integration tests.
 
 This educational project explores asynchronous I/O, shared state, resource ownership, error handling, and protocol validation in Rust. It implements a small subset of Redis functionality and is not a drop-in replacement for Redis.
 
@@ -11,7 +11,7 @@ This educational project explores asynchronous I/O, shared state, resource owner
 - `SET key value` stores a value, replacing any existing value for that key.
 - `GET key` returns the stored value, or a null response when the key is missing.
 - Command names in RESP requests are ASCII case-insensitive. The CLI uses lowercase `get` and `set`. Keys must be valid UTF-8; bulk-string values can contain arbitrary bytes.
-- Each CLI invocation sends one command. The library's `Requester` supports sequential commands over the same connection, subject to the recovery requirements described below.
+- **Each CLI invocation sends one command**. The library's `Requester` supports sequential commands over the same connection, subject to the recovery requirements described below.
 
 The frame layer supports simple strings, error strings, signed integers, bulk strings, nulls, and arrays. Commands are encoded as arrays; supporting a frame type does not make it a valid command argument.
 
@@ -57,7 +57,7 @@ cargo run --locked --bin client -- --help
 
 Hostnames are not supported by `--addr`. The server's bind address is configured in [`src/config.rs`](src/config.rs), rather than through a server CLI option.
 
-Press Ctrl+C in the server terminal to request shutdown. The server logs final metrics after its completion-tracking channel closes. Shutdown has no fixed completion deadline.
+Press Ctrl+C in the server terminal to request shutdown. The server logs final metrics after its completion-tracking channel closes. **Shutdown has no fixed completion deadline**.
 
 ## Architecture
 
@@ -155,13 +155,13 @@ These are protocol-input limits. They do not impose a total memory limit on the 
 
 ### Waiting admission at connection capacity
 
-The acceptor acquires a semaphore permit before accepting a connection. A handler owns that permit until it is dropped, limiting the number of admitted handlers.
+The acceptor **acquires a semaphore permit before accepting a connection**. A handler owns that permit until it is dropped, limiting the number of admitted handlers.
 
 When every permit is occupied, the accept loop waits for a slot to become available. Pending clients may still complete their TCP connection through the operating system's queue and receive service later. This behavior depends on queue capacity and client timeouts; it does not provide immediate overload rejection or guaranteed eventual service.
 
 ### Shared storage with short synchronous locking
 
-The database uses `Arc<Mutex<HashMap<String, Bytes>>>`. GET and SET perform short synchronous operations, and database methods do not hold a mutex guard across an `.await`.
+The database uses `Arc<Mutex<HashMap<String, Bytes>>>`. GET and SET perform short synchronous operations, and database methods **do not hold a mutex guard across an `.await`**.
 
 GET clones a `Bytes` handle to share the existing payload storage. This avoids copying that stored payload for the lookup result, although frame decoding still performs copies.
 
@@ -214,7 +214,7 @@ The committed `Cargo.lock` records dependency versions. `--locked` makes Cargo f
 | Server integration   | SET/GET, shutdown, idle timeout, protocol-error responses, waiting for released capacity                        |
 | Concurrent clients   | 100 client tasks, each performing SET followed by GET on a distinct key                                         |
 
-The concurrency test checks returned values and final metrics for 200 commands. It is a correctness test, not a throughput or latency benchmark.
+The concurrency test checks returned values and final metrics for 200 commands. It is a **correctness test**, not a throughput or latency benchmark.
 
 Network test scenarios have an outer five-second Tokio timeout. Some operations also retain shorter timeouts. The incomplete-frame and connection-capacity checks deliberately expect their shorter timeout to expire.
 
@@ -236,7 +236,7 @@ The database is in memory only. There is no persistence, expiration, eviction, o
 
 Shutdown is cooperative. Response writes and the final completion wait have no deadline, so a blocked write can delay shutdown. Library users must arrange shutdown subscriptions before broadcasting, because new subscribers do not receive earlier notifications.
 
-After a command timeout, or cancellation after its future has been polled, callers must drop the `Requester` and reconnect before issuing another command. The implementation documents this requirement but does not prevent reuse automatically. Reusing the connection can associate a delayed response with a later request. Reconnecting also does not establish whether a previous SET was applied.
+After a command timeout, or cancellation after its future has been polled, callers must **drop the `Requester` and reconnect before issuing another command**. The implementation documents this requirement but does not prevent reuse automatically. Reusing the connection can associate a delayed response with a later request. Reconnecting also does not establish whether a previous SET was applied.
 
 Callers constructing `Frame::Simple` or `Frame::Error` directly must exclude CR and LF from their payloads, including inside arrays. `write_frame()` does not validate this requirement.
 
