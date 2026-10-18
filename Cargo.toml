@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.91"
 description = "An educational Redis-like server and client built with Tokio"
-repository = "https://github.com/Qihang-Li/3_mini_redis"
+repository = "https://github.com/Qihang-Li/mini-redis"
 license = "MIT"
 
 [dependencies]
