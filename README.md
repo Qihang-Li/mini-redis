@@ -1,5 +1,7 @@
 # Mini-Redis
 
+[![Rust CI](https://github.com/Qihang-Li/mini-redis/actions/workflows/rust.yml/badge.svg?branch=master&event=push)](https://github.com/Qihang-Li/mini-redis/actions/workflows/rust.yml)
+
 A Redis-like TCP server and command-line client written in Rust with Tokio. It supports in-memory GET and SET operations over a RESP subset, with incremental frame parsing, concurrent connection handling, resource limits, coordinated shutdown, and unit and integration tests.
 
 This educational project explores asynchronous I/O, shared state, resource ownership, error handling, and protocol validation in Rust. It implements a small subset of Redis functionality and is not a drop-in replacement for Redis.
